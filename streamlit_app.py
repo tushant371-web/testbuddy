@@ -332,7 +332,10 @@ if st.button("🚀 Generate Test Plan", type="primary", use_container_width=True
                                     col1, col2 = st.columns([0.05, 0.95])
                                     
                                     with col1:
-                                        st.checkbox("", key=f"{test_type['type']}_{i}", label_visibility="collapsed")
+                                        checkbox_key = f"{test_type['type']}_{i}"
+                                        if st.checkbox("Complete", key=checkbox_key, label_visibility="collapsed"):
+                                            st.toast(f"✅ Test completed successfully: {test_case['name']}")
+                                    
                                     
                                     with col2:
                                         st.markdown(f"""
