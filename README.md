@@ -12,14 +12,33 @@ pip install -r requirements.txt
    - Environment variables: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
    - IAM role (if running on EC2)
 
-3. Run the application:
+3. Run the Streamlit UI:
+```bash
+streamlit run streamlit_app.py
+```
+
+4. (Optional) Run the FastAPI backend for API access:
 ```bash
 python main.py
 ```
 
 ## Usage
 
-### General Chat
+### Streamlit Web UI
+Access the beautiful web interface at `http://localhost:8501` after running the Streamlit app:
+
+- **Feature Document**: Enter your main feature document or requirement
+- **Additional Text Requirements**: Add multiple text-based requirements using the ➕ button
+- **Document Specifications**: Add multiple document specifications using the ➕ button
+- **Generate Test Plan**: Click to generate comprehensive test plans with technical tests and UAT cases
+
+The UI will display:
+- **Technical Test Types**: Unit, Integration, UI, API, E2E, Performance, Security, Database, Contract, and Smoke tests
+- **UAT Test Cases**: Business requirement validation test cases with detailed steps
+
+### API Endpoints
+
+#### General Chat
 Send POST request to `http://localhost:8000/chat`:
 
 ```bash

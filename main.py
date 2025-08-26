@@ -7,61 +7,61 @@ app = FastAPI()
 bedrock = boto3.client('bedrock-runtime', region_name='us-east-1')
 
 QA_PROMPT_TEMPLATE = """
-You are a QA specialist and test automation expert responsible for comprehensive test planning.
+    You are a QA specialist and test automation expert responsible for comprehensive test planning.
 
-A new feature/requirement or document has been provided that needs thorough testing coverage across multiple technical test types and UAT test cases.
+    A new feature/requirement or document has been provided that needs thorough testing coverage across multiple technical test types and UAT test cases.
 
-Feature Document:
-{input_document}
+    Feature Document:
+    {input_document}
 
-Instructions:
-1. Analyze the provided feature document thoroughly
-2. Generate a comprehensive test plan focusing on technical test types including:
-   - Unit Tests (individual component/function testing)
-   - Integration Tests (component interaction testing)
-   - UI Tests (user interface testing)
-   - API Tests (endpoint and service testing)
-   - End-to-End Tests (complete user workflow testing)
-   - Performance Tests (load, stress, scalability testing)
-   - Security Tests (vulnerability and penetration testing)
-   - Database Tests (data integrity and CRUD operations)
-   - Contract Tests (API contract validation)
-   - Smoke Tests (basic functionality verification)
-3. Generate UAT (User Acceptance Test) cases that focus on business requirements validation
-4. For each test type, provide specific test cases with technical implementation details
-5. Include test frameworks, tools, and automation approaches
-6. Consider edge cases, error scenarios, and boundary conditions
+    Instructions:
+    1. Analyze the provided feature document thoroughly
+    2. Generate a comprehensive test plan focusing on technical test types including:
+    - Unit Tests (individual component/function testing)
+    - Integration Tests (component interaction testing)
+    - UI Tests (user interface testing)
+    - API Tests (endpoint and service testing)
+    - End-to-End Tests (complete user workflow testing)
+    - Performance Tests (load, stress, scalability testing)
+    - Security Tests (vulnerability and penetration testing)
+    - Database Tests (data integrity and CRUD operations)
+    - Contract Tests (API contract validation)
+    - Smoke Tests (basic functionality verification)
+    3. Generate UAT (User Acceptance Test) cases that focus on business requirements validation
+    4. For each test type, provide specific test cases with technical implementation details
+    5. Include test frameworks, tools, and automation approaches
+    6. Consider edge cases, error scenarios, and boundary conditions
 
-Return the response in this JSON format:
-{{
-"test_types": [
-{{
-"type": "string",
-"description": "string", 
-"test_cases": [
-{{
-"name": "string",
-"objective": "string",
-"prerequisites": ["string"],
-"implementation_steps": ["string"],
-"expected_results": "string"
-}}
-]
-}}
-],
-"uat_test_cases": [
-{{
-"test_case_id": "string",
-"test_case_name": "string",
-"test_objective": "string",
-"preconditions": "string",
-"test_steps": ["string"],
-"expected_result": "string",
-"actual_result": "string",
-"status": "string"
-}}
-]
-}}
+    Return the response in this JSON format:
+    {{
+    "test_types": [
+    {{
+    "type": "string",
+    "description": "string", 
+    "test_cases": [
+    {{
+    "name": "string",
+    "objective": "string",
+    "prerequisites": ["string"],
+    "implementation_steps": ["string"],
+    "expected_results": "string"
+    }}
+    ]
+    }}
+    ],
+    "uat_test_cases": [
+    {{
+    "test_case_id": "string",
+    "test_case_name": "string",
+    "test_objective": "string",
+    "preconditions": "string",
+    "test_steps": ["string"],
+    "expected_result": "string",
+    "actual_result": "string",
+    "status": "string"
+    }}
+    ]
+    }}
 """
 
 @app.post("/chat")
