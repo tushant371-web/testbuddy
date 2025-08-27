@@ -292,6 +292,19 @@ if uploaded_files:
                 )
                 st.success(f"✅ Text extracted successfully ({len(extracted_text)} characters)")
 
+# Initialize session state
+if 'test_plan' not in st.session_state:
+    st.session_state.test_plan = None
+if 'expanded_sections' not in st.session_state:
+    st.session_state.expanded_sections = set()
+if 'completed_tests' not in st.session_state:
+    st.session_state.completed_tests = set()
+
+# Callback function for checkbox changes
+def on_checkbox_change(section_key, test_name, checkbox_key):
+    st.session_state.expanded_sections.add(section_key)
+    st.toast(f"✅ Test completed: {test_name}")
+
 # Generate button
 if st.button("🚀 Generate Test Plan", type="primary", use_container_width=True):
     # Prepare inputs
@@ -311,90 +324,103 @@ if st.button("🚀 Generate Test Plan", type="primary", use_container_width=True
                 if isinstance(test_plan_text, dict) and "error" in test_plan_text:
                     st.error(test_plan_text["error"])
                 else:
-                    # Try to parse as JSON
                     try:
-                        test_plan = json.loads(test_plan_text)
-                        
-                        # Display All Test Types
-                        st.header("🎯 Test Plan Results")
-                        
-                        for test_type in test_plan.get("test_types", []):
-                            is_uat = test_type['type'].upper() == 'UAT TESTS' or 'UAT' in test_type['type'].upper()
-                            icon = "✅" if is_uat else "🔧"
-                            card_class = "uat-card" if is_uat else "tech-card"
-                            
-                            with st.expander(f"{icon} {test_type['type']}", expanded=False):
-                                st.markdown(f"**📋 Description:** {test_type['description']}")
-                                st.markdown("---")
-                                
-                                for i, test_case in enumerate(test_type.get('test_cases', []), 1):
-                                    # Test case container with checkbox
-                                    col1, col2 = st.columns([0.05, 0.95])
-                                    
-                                    with col1:
-                                        checkbox_key = f"{test_type['type']}_{i}"
-                                        if st.checkbox("Complete", key=checkbox_key, label_visibility="collapsed"):
-                                            st.toast(f"✅ Test completed successfully: {test_case['name']}")
-                                    
-                                    
-                                    with col2:
-                                        st.markdown(f"""
-                                        <div class="test-card {card_class}">
-                                            <div class="test-header">
-                                                <span class="test-title">Test Case {i}: {test_case['name']}</span>
-                                            </div>
-                                        </div>
-                                        """, unsafe_allow_html=True)
-                                        
-                                        # Objective section
-                                        st.markdown(f"""
-                                        <div class="objective-text">
-                                            <strong>🎯 Objective:</strong> {test_case['objective']}
-                                        </div>
-                                        """, unsafe_allow_html=True)
-                                        
-                                        # Prerequisites section
-                                        if test_case.get('prerequisites'):
-                                            st.markdown('<div class="test-section-title">📋 Prerequisites</div>', unsafe_allow_html=True)
-                                            st.markdown('<div class="test-list">', unsafe_allow_html=True)
-                                            for prereq in test_case['prerequisites']:
-                                                st.markdown(f"""
-                                                <div class="test-list-item">
-                                                    <span class="test-bullet">▶</span>
-                                                    <span>{prereq}</span>
-                                                </div>
-                                                """, unsafe_allow_html=True)
-                                            st.markdown('</div>', unsafe_allow_html=True)
-                                        
-                                        # Implementation Steps section
-                                        if test_case.get('implementation_steps'):
-                                            st.markdown('<div class="test-section-title">⚙️ Implementation Steps</div>', unsafe_allow_html=True)
-                                            st.markdown('<div class="test-list">', unsafe_allow_html=True)
-                                            for step in test_case['implementation_steps']:
-                                                st.markdown(f"""
-                                                <div class="test-list-item">
-                                                    <span class="test-bullet">🔸</span>
-                                                    <span>{step}</span>
-                                                </div>
-                                                """, unsafe_allow_html=True)
-                                            st.markdown('</div>', unsafe_allow_html=True)
-                                        
-                                        # Expected Results section
-                                        st.markdown(f"""
-                                        <div class="expected-result">
-                                            <strong>✅ Expected Results:</strong> {test_case['expected_results']}
-                                        </div>
-                                        """, unsafe_allow_html=True)
-                                        
-                                        st.markdown("<br>", unsafe_allow_html=True)
-                        
+                        st.session_state.test_plan = json.loads(test_plan_text)
                     except json.JSONDecodeError:
-                        # Fallback to raw text display
-                        st.header("📋 Generated Test Plan")
-                        st.text_area("Test Plan Output", test_plan_text, height=400)
+                        st.session_state.test_plan = {"raw_text": test_plan_text}
                         
             except Exception as e:
                 st.error(f"❌ An error occurred: {str(e)}")
 
+# Display test plan if available
+if st.session_state.test_plan:
+    if "raw_text" in st.session_state.test_plan:
+        st.header("📋 Generated Test Plan")
+        st.text_area("Test Plan Output", st.session_state.test_plan["raw_text"], height=400)
+    else:
+        st.header("🎯 Test Plan Results")
+        
+        for test_type in st.session_state.test_plan.get("test_types", []):
+            is_uat = test_type['type'].upper() == 'UAT TESTS' or 'UAT' in test_type['type'].upper()
+            icon = "✅" if is_uat else "🔧"
+            card_class = "uat-card" if is_uat else "tech-card"
+            
+            section_key = test_type['type']
+            # Always expand if any test in this section is completed
+            has_completed_tests = any(f"{section_key}_{j}" in st.session_state.completed_tests 
+                                    for j in range(1, len(test_type.get('test_cases', [])) + 1))
+            is_expanded = section_key in st.session_state.expanded_sections or has_completed_tests
+            
+            with st.expander(f"{icon} {test_type['type']}", expanded=is_expanded):
+                st.markdown(f"**📋 Description:** {test_type['description']}")
+                st.markdown("---")
+                
+                for i, test_case in enumerate(test_type.get('test_cases', []), 1):
+                    col1, col2 = st.columns([0.05, 0.95])
+                    
+                    with col1:
+                        checkbox_key = f"{test_type['type']}_{i}"
+                        checkbox_value = st.checkbox(
+                            "Complete", 
+                            key=checkbox_key, 
+                            label_visibility="collapsed",
+                            on_change=on_checkbox_change,
+                            args=(section_key, test_case['name'], checkbox_key)
+                        )
+                        
+                        # Track completed tests
+                        if checkbox_value:
+                            st.session_state.completed_tests.add(checkbox_key)
+                        elif checkbox_key in st.session_state.completed_tests:
+                            st.session_state.completed_tests.remove(checkbox_key)
+                    
+                    with col2:
+                        st.markdown(f"""
+                        <div class="test-card {card_class}">
+                            <div class="test-header">
+                                <span class="test-title">Test Case {i}: {test_case['name']}</span>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        st.markdown(f"""
+                        <div class="objective-text">
+                            <strong>🎯 Objective:</strong> {test_case['objective']}
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        if test_case.get('prerequisites'):
+                            st.markdown('<div class="test-section-title">📋 Prerequisites</div>', unsafe_allow_html=True)
+                            st.markdown('<div class="test-list">', unsafe_allow_html=True)
+                            for prereq in test_case['prerequisites']:
+                                st.markdown(f"""
+                                <div class="test-list-item">
+                                    <span class="test-bullet">▶</span>
+                                    <span>{prereq}</span>
+                                </div>
+                                """, unsafe_allow_html=True)
+                            st.markdown('</div>', unsafe_allow_html=True)
+                        
+                        if test_case.get('implementation_steps'):
+                            st.markdown('<div class="test-section-title">⚙️ Implementation Steps</div>', unsafe_allow_html=True)
+                            st.markdown('<div class="test-list">', unsafe_allow_html=True)
+                            for step in test_case['implementation_steps']:
+                                st.markdown(f"""
+                                <div class="test-list-item">
+                                    <span class="test-bullet">🔸</span>
+                                    <span>{step}</span>
+                                </div>
+                                """, unsafe_allow_html=True)
+                            st.markdown('</div>', unsafe_allow_html=True)
+                        
+                        st.markdown(f"""
+                        <div class="expected-result">
+                            <strong>✅ Expected Results:</strong> {test_case['expected_results']}
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        st.markdown("<br>", unsafe_allow_html=True)
+
 # Footer
 st.markdown("---")
+st.markdown("<div style='text-align: center; color: #666; padding: 20px;'>TestBuddy AI - Powered by Claude Sonnet 4</div>", unsafe_allow_html=True)
