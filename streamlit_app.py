@@ -15,7 +15,12 @@ st.set_page_config(
 @st.cache_resource
 def get_bedrock_client():
     try:
-        return boto3.client('bedrock-runtime', region_name='us-east-1')
+        return boto3.client(
+            'bedrock-runtime',
+            region_name=st.secrets["AWS_DEFAULT_REGION"],
+            aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"]
+        )
     except Exception as e:
         st.error(f"AWS Credentials Error: {str(e)}")
         st.info("Please configure AWS credentials using one of these methods:")
